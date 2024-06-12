@@ -1,7 +1,10 @@
-version: '2.2'
+version: '3.8'
 services:
   backend:
-    image: educative1/python_django_flask:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+    # image: eduQ-pp:latest
     command: 'python3 core.py'
     ports:
       - 5001:5000

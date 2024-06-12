@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: eduQ-pp:latest
+    command: 'python3 manage.py runserver 0.0.0.0:8000'
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/backendservice
+    depends_on:
+      - db
+      - rabbitmq
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'python3 -u consumer.py'
+    depends_on:
+      - db
+      - rabbitmq
+  
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: config
+      MYSQL_USER: microservice 
+      MYSQL_PASSWORD: microservice 
+      MYSQL_ROOT_PASSWORD: microservice 
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - 3306:3306
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  dbdata:
+  rabbitmq_data:
