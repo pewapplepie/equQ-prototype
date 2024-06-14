@@ -73,48 +73,17 @@ class DegreeView(db.Model):
     user = db.relationship('User', back_populates='degree_views')
 
 
-# Creating the UserProfile model:
-@dataclass
-class UserProfile(db.Model):
-    id: int
-    user_id: int
-    full_name: str
-    date_of_birth: str
-    bio: str
-    profile_picture: str
-    degree_id: int
-    interests: str
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    full_name = db.Column(db.String(255), nullable=True)
-    date_of_birth = db.Column(db.Date, nullable=True)
-    bio = db.Column(db.Text, nullable=True)
-    profile_picture = db.Column(db.String(255), nullable=True)
-    degree_id = db.Column(db.Integer, db.ForeignKey('degree.id'), nullable=True)
-    interests = db.Column(db.Text, nullable=True)
-
-    user = db.relationship('User', back_populates='profile')
-    degree = db.relationship('Degree', back_populates='students')
-
-
 # Creating the User model:
 @dataclass
 class User(db.Model):
-    id: int
-    username: str
-    email: str
-    first_name: str
-    last_name: str
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(255))
+    profile_picture = db.Column(db.String(255))
+    date_of_birth = db.Column(db.Date)
+    bio = db.Column(db.Text)
+    interests = db.Column(db.Text)
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(255), nullable=False, unique=True)
-    email = db.Column(db.String(255), nullable=False, unique=True)
-    first_name = db.Column(db.String(255), nullable=True)
-    last_name = db.Column(db.String(255), nullable=True)
-
-    profile = db.relationship('UserProfile', back_populates='user', uselist=False)
-    degree_views = db.relationship('DegreeView', back_populates='user')
+    UniqueConstraint('degree_id', 'user_id', name='degree_user_unique')
 
 
 # Setting up relationships

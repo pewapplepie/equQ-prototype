@@ -1,36 +1,62 @@
 version: '3.8'
+
 services:
-  backend:
-  build:
-    context: .
-    dockerfile: Dockerfile
-    # image: eduQ-pp:latest
-    command: 'python3 core.py'
+  core:
+    build: .
+    command: python core.py
     ports:
-      - 5001:5000
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=mysql://microservice:microservice@db_core/core
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672/
+    depends_on:
+      db_core:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - .:/backendservice
-    depends_on:
-       db:
-          condition: service_healthy
+    networks:
+      - shared_network
 
-  db:
+  core_consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'python3 -u consumer.py'
+    environment:
+      - DATABASE_URL=mysql://microservice:microservice@db_core/core
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672/
+    depends_on:
+      - db_core
+      - rabbitmq
+    volumes:
+      - .:/backendservice
+    networks:
+      - shared_network
+
+  db_core:
     image: mysql:latest
-    restart: always
     environment:
       MYSQL_DATABASE: core
-      MYSQL_USER: microservice 
-      MYSQL_PASSWORD: microservice 
-      MYSQL_ROOT_PASSWORD: microservice 
+      MYSQL_USER: microservice
+      MYSQL_PASSWORD: microservice
+      MYSQL_ROOT_PASSWORD: microservice
     volumes:
-      - dbdata:/var/lib/mysql
+      - db_data_core:/var/lib/mysql
     ports:
-      - 3306:3306
+      - "3308:3306"
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      
+    networks:
+      - shared_network
+
 volumes:
-  dbdata:
+  db_data_core:
+
+networks:
+  shared_network:
+    external: true

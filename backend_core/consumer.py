@@ -1,27 +1,18 @@
-import pika, os, django, json
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-
-django.setup()
-
-# Import models only after calling django.setup()
-from educations.models import School, Degree, DegreeView, UserProfile, User
+import pika, json, os
+from core import Degree, db, User
 
 # Get RabbitMQ URL from environment variable
-# rabbitmq_url = os.environ.get('RABBITMQ_URL')
-# if not rabbitmq_url:
-    # raise ValueError("RABBITMQ_URL environment variable not set")
-# print(f'rabbit mq: {rabbitmq_url}')
-# params = pika.URLParameters(rabbitmq_url)
+rabbitmq_url = os.environ.get('RABBITMQ_URL')
+if not rabbitmq_url:
+    raise ValueError("RABBITMQ_URL environment variable not set")
+
+params = pika.URLParameters(rabbitmq_url)
 
 # Create a connection
-connection_params = pika.ConnectionParameters('localhost', 5672, '/', pika.PlainCredentials('user', 'password'))
-connection = pika.BlockingConnection(connection_params)
-
+connection = pika.BlockingConnection(params)
 channel = connection.channel()
 
-# Declare a queue channel
-channel.queue_declare(queue='config')
+channel.queue_declare(queue='core')
 
 # Defining a callback function
 def callback(ch, method, properties, body):
